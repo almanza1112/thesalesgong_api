@@ -1,0 +1,19 @@
+{
+  "name": "thesalesgong_api",
+  "version": "1.0.0",
+  "description": "API for The Sales Gong",
+  "main": "index.js",
+  "scripts": {
+    "devStart": "nodemon index.js"
+  },
+  "author": "Bryant Almanza",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "firebase-admin": "^12.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}
