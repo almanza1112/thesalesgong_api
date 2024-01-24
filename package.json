@@ -4,7 +4,9 @@
   "description": "API for The Sales Gong",
   "main": "index.js",
   "scripts": {
-    "devStart": "nodemon index.js"
+    "devStart": "nodemon index.js",
+        "start": "nodemon index.js"
+
   },
   "author": "Bryant Almanza",
   "license": "ISC",
