@@ -22,8 +22,11 @@ app.use("/account", accountRouter);
 const signUpRouter = require("./routes/sign_up");
 app.use("/sign_up", signUpRouter);
 
+const gongRouter = require("./routes/gong");
+app.use("/gong", gongRouter);
+
 //Uncomment below for local testing
-app.listen(3000, () => console.log("Server Started"));
+//app.listen(3000, () => console.log("Server Started"));
 
 //Uncomment below for push
-//app.listen(process.env.PORT || 5000, () => console.log("Server Started"));
+app.listen(process.env.PORT || 5000, () => console.log("Server Started"));

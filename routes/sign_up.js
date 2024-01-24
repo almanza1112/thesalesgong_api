@@ -94,8 +94,10 @@ router.post("/team_member", async (req, res) => {
     .doc(teamID)
     .get()
     .then((doc) => {
+      // Team exists, proceed to check if email is in team
       var emails = doc.data().emails;
       if (emails.includes(email)) {
+        // Email is in team, proceed to create user
         firebase
           .auth()
           .createUser({
@@ -106,25 +108,41 @@ router.post("/team_member", async (req, res) => {
             disabled: false,
           })
           .then(function (userRecord) {
-            res.status(201).json({ result: "success" });
+            // User is created successfully
+            // Proceed to add user to Firestore + add user FCM token 
+            const batch = firestore.batch();
+
+            const userRef = firestore.collection("users").doc(userRecord.uid);
+            batch.set(userRef, {
+              email: req.body.email,
+              fcm_token: req.body.fcm_token,
+              role: "team_member",
+            });
+
+            const teamRef = firestore.collection("teams").doc(teamID);
+            batch.update(teamRef, {
+              fcm_tokens: firebase.firestore.FieldValue.arrayUnion(req.body.fcm_token),
+            });
+
+            batch.commit().then(() => {
+              res.status(201).json({ result: "success" });
+            }).catch((error) => {
+              console.log(3);
+            });
           })
           .catch(function (error) {
             if (error.errorInfo.code == "auth/email-already-exists") {
-              res
-                .status(409)
-                .json({
-                  result: "failure",
-                  message: error.errorInfo.message,
-                  part: "creating user",
-                });
+              res.status(409).json({
+                result: "failure",
+                message: error.errorInfo.message,
+                part: "creating user",
+              });
             } else {
-              res
-                .status(500)
-                .json({
-                  result: "failure",
-                  message: error.errorInfo.message,
-                  part: "creating user",
-                });
+              res.status(500).json({
+                result: "failure",
+                message: error.errorInfo.message,
+                part: "creating user",
+              });
             }
           });
       } else {
