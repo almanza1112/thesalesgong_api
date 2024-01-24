@@ -4,6 +4,13 @@ const bodyParser = require("body-parser"); // TODO: do I really need this?
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+var firebaseAdmin = require("firebase-admin");
+var serviceAccount = require("./the-sales-gong-firebase-adminsdk-k5avf-08bfd8eda5.json");
+
+firebaseAdmin.initializeApp({
+  credential: firebaseAdmin.credential.cert(serviceAccount),
+  databaseURL: "https://brick-hold-em-default-rtdb.firebaseio.com",
+});
 
 app.get("/", async (req, res) => {
   res.send("Welcome to The Sales Gong API");
