@@ -138,6 +138,7 @@ router.post("/team_member", async (req, res) => {
                 part: "creating user",
               });
             } else {
+              console.log(error);
               res.status(500).json({
                 result: "failure",
                 message: error.errorInfo.message,

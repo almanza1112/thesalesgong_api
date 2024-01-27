@@ -5,7 +5,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 var firebaseAdmin = require("firebase-admin");
-var serviceAccount = require("./the-sales-gong-firebase-adminsdk-k5avf-08bfd8eda5.json");
+var serviceAccount = require("./the-sales-gong-firebase-adminsdk-k5avf-77b599a64b.json");
 
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount),
@@ -22,11 +22,12 @@ app.use("/account", accountRouter);
 const signUpRouter = require("./routes/sign_up");
 app.use("/sign_up", signUpRouter);
 
-const gongRouter = require("./routes/gong");
+const gongRouter = require("./routes/gong.js");
 app.use("/gong", gongRouter);
 
 //Uncomment below for local testing
-//app.listen(3000, () => console.log("Server Started"));
+app.listen(3000, () => console.log("Server Started"));
 
 //Uncomment below for push
-app.listen(process.env.PORT || 5000, () => console.log("Server Started"));
+//app.listen(process.env.PORT || 5000, () => console.log("Server Started"));
+
