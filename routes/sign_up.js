@@ -48,9 +48,10 @@ router.post("/admin/complete_purchase", async (req, res) => {
 
   var completeTeamArray = [...teamMembersArray, req.body.email];
 
-  var teamID = generateRandomOrder();
+  var teamID = await generateTeamID();
+  console.log(teamID);
 
-  const batch = firestore.batch();
+  var batch = firestore.batch();
 
   // Create teams
   const teamRef = firestore.collection("teams").doc(teamID);
@@ -78,10 +79,17 @@ router.post("/admin/complete_purchase", async (req, res) => {
     fcm_token: req.body.fcm_token,
     role: "admin",
     paid: true,
+    team_ID: teamID,
   });
 
-  batch.commit().then(() => {
-    res.status(201).json({ result: "success" });
+  var teamIDsRef = firestore.collection("teams").doc("team_IDs");
+  batch.update(teamIDsRef, {
+    team_IDs: firebase.firestore.FieldValue.arrayUnion(teamID),
+  });
+
+  batch.commit().then((result) => {
+    console.log(result);
+    res.status(201).json({ result: "success", team_ID: teamID });
   });
 });
 
@@ -109,7 +117,7 @@ router.post("/team_member", async (req, res) => {
           })
           .then(function (userRecord) {
             // User is created successfully
-            // Proceed to add user to Firestore + add user FCM token 
+            // Proceed to add user to Firestore + add user FCM token
             const batch = firestore.batch();
 
             const userRef = firestore.collection("users").doc(userRecord.uid);
@@ -121,14 +129,19 @@ router.post("/team_member", async (req, res) => {
 
             const teamRef = firestore.collection("teams").doc(teamID);
             batch.update(teamRef, {
-              fcm_tokens: firebase.firestore.FieldValue.arrayUnion(req.body.fcm_token),
+              fcm_tokens: firebase.firestore.FieldValue.arrayUnion(
+                req.body.fcm_token
+              ),
             });
 
-            batch.commit().then(() => {
-              res.status(201).json({ result: "success" });
-            }).catch((error) => {
-              console.log(3);
-            });
+            batch
+              .commit()
+              .then(() => {
+                res.status(201).json({ result: "success" });
+              })
+              .catch((error) => {
+                console.log(3);
+              });
           })
           .catch(function (error) {
             if (error.errorInfo.code == "auth/email-already-exists") {
@@ -162,27 +175,36 @@ router.post("/team_member", async (req, res) => {
     });
 });
 
-function generateRandomString(length) {
+async function generateTeamID() {
   const characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let result = "";
 
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    result += characters.charAt(randomIndex);
+  // Retrieve existing teamIDs from Firestore
+  const docRef = firestore.collection("teams").doc("team_IDs");
+
+  try {
+    const doc = await docRef.get();
+
+    let teamIDs;
+    if (doc.exists) {
+      teamIDs = doc.data().team_IDs;
+    } else {
+      teamIDs = [];
+    }
+
+    // Generate a unique team ID
+    do {
+      result = "";
+      for (let i = 0; i < 7; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        result += characters.charAt(randomIndex);
+      }
+    } while (teamIDs.includes(result));
+
+    return result;
+  } catch (error) {
+    console.error("Error generating team ID:", error);
   }
-
-  return result;
-}
-
-function generateRandomOrder() {
-  const numberOfOrders = 6;
-  let concatenatedString = "";
-
-  for (let i = 0; i < numberOfOrders; i++) {
-    concatenatedString += generateRandomString(1); // Adjust the length as needed
-  }
-
-  return concatenatedString;
 }
 
 module.exports = router;

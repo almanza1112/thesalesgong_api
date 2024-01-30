@@ -26,8 +26,8 @@ const gongRouter = require("./routes/gong.js");
 app.use("/gong", gongRouter);
 
 //Uncomment below for local testing
-app.listen(3000, () => console.log("Server Started"));
+//app.listen(3000, () => console.log("Server Started"));
 
 //Uncomment below for push
-//app.listen(process.env.PORT || 5000, () => console.log("Server Started"));
+app.listen(process.env.PORT || 5000, () => console.log("Server Started"));
 
