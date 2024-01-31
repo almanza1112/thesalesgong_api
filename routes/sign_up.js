@@ -48,6 +48,10 @@ router.post("/admin/complete_purchase", async (req, res) => {
 
   var completeTeamArray = [...teamMembersArray, req.body.email];
 
+  var registeredTeamMembersArray = [
+    { name: req.body.name, email: req.body.email, role: "admin" },
+  ];
+
   var teamID = await generateTeamID();
   console.log(teamID);
 
@@ -58,6 +62,7 @@ router.post("/admin/complete_purchase", async (req, res) => {
   batch.set(teamRef, {
     emails: completeTeamArray,
     fcm_tokens: fcmTokenArray,
+    registered_team_members: registeredTeamMembersArray,
     team_ID: teamID,
   });
 
@@ -132,6 +137,11 @@ router.post("/team_member", async (req, res) => {
               fcm_tokens: firebase.firestore.FieldValue.arrayUnion(
                 req.body.fcm_token
               ),
+              registered_team_members: firebase.firestore.FieldValue.arrayUnion({
+                name: req.body.name,
+                email: req.body.email,
+                role: "team_member",
+              }),
             });
 
             batch
@@ -160,6 +170,7 @@ router.post("/team_member", async (req, res) => {
             }
           });
       } else {
+        // Team exists but email is not in team
         res.status(409).json({
           result: "failure",
           message: "User not in team",
