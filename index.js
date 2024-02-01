@@ -11,7 +11,6 @@ var serviceAccount = require("./the-sales-gong-firebase-adminsdk-k5avf-77b599a64
 
 firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount),
-  databaseURL: "https://brick-hold-em-default-rtdb.firebaseio.com",
 });
 
 app.get("/", async (req, res) => {
