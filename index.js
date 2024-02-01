@@ -1,4 +1,6 @@
 const express = require("express");
+const cron = require("node-cron");
+const https = require("https");
 const app = express();
 const bodyParser = require("body-parser"); // TODO: do I really need this?
 app.use(bodyParser.json());
@@ -30,4 +32,12 @@ app.use("/gong", gongRouter);
 
 //Uncomment below for push
 app.listen(process.env.PORT || 5000, () => console.log("Server Started"));
+
+// Schedule a self-ping every 5 minutes
+cron.schedule('*/10 * * * *', () => {
+  console.log("Pinging self...");
+  https.get("https://the-sales-gong-api.onrender.com", (res) => {
+    console.log(`Ping response: ${res.statusCode}`);
+  });
+});
 
