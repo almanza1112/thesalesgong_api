@@ -39,21 +39,19 @@ router.post("/hit", async (req, res) => {
             },
             tokens: fcm_tokens,
           };
-          
+
           messaging
             .sendEachForMulticast(message)
             .then((response) => {
               // Response is a message ID string.
               console.log("Successfully sent message:", response);
+              res.status(201).json({ message: "success" });
             })
             .catch((error) => {
               console.log("Error sending message:", error);
             });
         })
         .catch((error) => {});
-
-
-      
     })
     .catch((error) => {
       console.log("Error getting document:", error);
