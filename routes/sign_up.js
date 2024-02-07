@@ -22,11 +22,14 @@ router.post("/admin", async (req, res) => {
       res.status(201).json({ result: "success" });
     })
     .catch(function (error) {
-      console.log("Error creating new user:", error.errorInfo.message);
-      if (error.errorInfo.code == "auth/email-already-exists") {
+      console.log("Error creating new user:", error.errorInfo);
+      if (
+        error.errorInfo.code == "auth/email-already-exists" ||
+        error.errorInfo.code == "auth/invalid-email"
+      ) {
         res
           .status(409)
-          .json({ result: "failure", message: error.errorInfo.message });
+          .json({ result: "failure", message: error.errorInfo.code });
       } else {
         res
           .status(500)
@@ -37,6 +40,8 @@ router.post("/admin", async (req, res) => {
 
 router.post("/admin/complete_purchase", async (req, res) => {
   var teamMembers = req.body.team_members;
+  var adminEmail = req.body.email;
+  var teamName = req.body.team_name;
 
   // Removes the brackets surronding the move string array
   var trimmeedTeamMembers = teamMembers.slice(1, -1);
@@ -53,7 +58,6 @@ router.post("/admin/complete_purchase", async (req, res) => {
   ];
 
   var teamID = await generateTeamID();
-  console.log(teamID);
 
   var batch = firestore.batch();
 
@@ -63,18 +67,44 @@ router.post("/admin/complete_purchase", async (req, res) => {
     emails: completeTeamArray,
     fcm_tokens: fcmTokenArray,
     registered_team_members: registeredTeamMembersArray,
+    gong_history: [],
     team_ID: teamID,
+    team_name: teamName,
   });
 
-  const mailRef = firestore.collection("mail").doc(req.body.uid);
-  batch.set(mailRef, {
+  const mailAdminRef = firestore.collection("mail").doc(req.body.uid);
+  batch.set(mailAdminRef, {
+    to: adminEmail,
+    message: {
+      subject: "Welcome to The Sales Gong!",
+      html:
+        '<p>Thank you for signing up for The Sales Gong!<br/><br/>We have sent the invites to your team members so they can install the app. If they don’t receive the notification, they can go to <a href="https://thesalesgong.com">www.thesalesgong.com</a> and install it on their device.' +
+        "<br/><br/>Your team ID is: " +
+        teamID +
+        "<br/><br/>Subsciption Details:" +
+        "<br/>Number of Users: " +
+        completeTeamArray.length +
+        "<br/>Annual Fee per User: $9.99" +
+        "<br/>Total Annuel Fee: $" +
+        completeTeamArray.length * 9.99 +
+        "<br/><br/>You can add or disable users within your app settings at any time." +
+        "<br/><br/>If you have any questions, please do not hesitate to reach out to us at hello@thesalesgong.com." +
+        "<br/><br/>Happy selling!!</p>",
+    },
+  });
+
+  const mailTeamRef = firestore.collection("mail").doc(teamID);
+  batch.set(mailTeamRef, {
     to: teamMembersArray,
     message: {
       subject: "You're Invited!",
       html:
-        "<p>You’ve been invited to The Sales Gong<br/><br/>Your Team ID is: " +
+        "<p>Hello!<br/><br/>You’ve been invited to The Sales Gong for " +
+        teamName + "!" +
+        "<br/><br/>Go to www.thesalesgong.com to install the app on your device to join the celebration." +
+        "<br/><br/>Your Team ID is: " +
         teamID +
-        "<br/><br/>Now let’s hit that gong!!</p>",
+        "<br/><br/>Now let’s close some deals and hit that gong!!</p>",
     },
   });
 
@@ -93,7 +123,6 @@ router.post("/admin/complete_purchase", async (req, res) => {
   });
 
   batch.commit().then((result) => {
-    console.log(result);
     res.status(201).json({ result: "success", team_ID: teamID });
   });
 });
@@ -109,6 +138,7 @@ router.post("/team_member", async (req, res) => {
     .then((doc) => {
       // Team exists, proceed to check if email is in team
       var emails = doc.data().emails;
+      var teamName = doc.data().team_name;
       if (emails.includes(email)) {
         // Email is in team, proceed to create user
         firebase
@@ -137,17 +167,19 @@ router.post("/team_member", async (req, res) => {
               fcm_tokens: firebase.firestore.FieldValue.arrayUnion(
                 req.body.fcm_token
               ),
-              registered_team_members: firebase.firestore.FieldValue.arrayUnion({
-                name: req.body.name,
-                email: req.body.email,
-                role: "team_member",
-              }),
+              registered_team_members: firebase.firestore.FieldValue.arrayUnion(
+                {
+                  name: req.body.name,
+                  email: req.body.email,
+                  role: "team_member",
+                }
+              ),
             });
 
             batch
               .commit()
               .then(() => {
-                res.status(201).json({ result: "success" });
+                res.status(201).json({ result: "success", team_name: teamName});
               })
               .catch((error) => {
                 console.log(3);
