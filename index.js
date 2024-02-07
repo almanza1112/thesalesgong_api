@@ -32,7 +32,8 @@ app.use("/gong", gongRouter);
 //Uncomment below for push
 app.listen(process.env.PORT || 5000, () => console.log("Server Started"));
 
-// Schedule a self-ping every 5 minutes
+// Schedule a self-ping every 10 minutes
+// Uncomment for production push. Comment for local testing
 cron.schedule('*/10 * * * *', () => {
   console.log("Pinging self...");
   https.get("https://the-sales-gong-api.onrender.com", (res) => {
