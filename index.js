@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const cron = require("node-cron");
 const https = require("https");
 const app = express();
@@ -13,8 +14,10 @@ firebaseAdmin.initializeApp({
   credential: firebaseAdmin.credential.cert(serviceAccount),
 });
 
+app.use(express.static(path.join(__dirname, "public")));
+
 app.get("/", async (req, res) => {
-  res.send("Welcome to The Sales Gong API");
+  res.render("index");
 });
 
 const accountRouter = require("./routes/account");

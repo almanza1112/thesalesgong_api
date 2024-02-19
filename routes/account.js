@@ -152,4 +152,45 @@ router.post("/change_name", async (req, res) => {
     });
 });
 
+router.post("/add_teammember", async (req, res) => {
+  var teamID = req.body.team_ID;
+  var email = req.body.email;
+  var teamName = req.body.team_name;
+  
+  firebaseAuth
+    .getUserByEmail(email)
+    .then((doc) => {
+      res
+        .status(409)
+        .json({ message: "failure", error: "Email already in use" });
+    })
+    .catch((error) => {
+       const batch = firestore.batch();
+       const emailRef = firestore.collection("teams").doc(teamID);
+       batch.update(emailRef, {
+         emails: admin.firestore.FieldValue.arrayUnion(email),
+       });
+
+      const mailTeamRef = firestore.collection("mail").doc(teamID);
+      batch.set(mailTeamRef, {
+        to: email,
+        message: {
+          subject: "You're Invited!",
+          html:
+            "<p>Hello!<br/><br/>You’ve been invited to The Sales Gong for " +
+            teamName +
+            "!" +
+            "<br/><br/>Go to www.thesalesgong.com to install the app on your device to join the celebration." +
+            "<br/><br/>Your Team ID is: " +
+            teamID +
+            "<br/><br/>Now let’s close some deals and hit that gong!!</p>",
+        },
+      });
+
+      batch.commit().then((result) => {
+        res.status(201).json({ result: "success"});
+      });
+    });
+});
+
 module.exports = router;
