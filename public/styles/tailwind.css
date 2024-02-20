@@ -5,7 +5,7 @@
 @layer base {
     body {
         @apply font-light;
-        @apply text-gray-100;
+        @apply text-green-100;
         @apply subpixel-antialiased;
     }
 }
