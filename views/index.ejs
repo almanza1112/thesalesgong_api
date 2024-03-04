@@ -33,28 +33,27 @@
   </head>
   <body class="bg-gray-100 font-sans">
     <!-- Header & Download Section -->
-
     <div class="w-full bg-gradient-to-r from-blue-900 to-indigo-600 px-8">
-      <div class="max-w-screen-2xl w-full h-screen mx-auto justify-center flex">
-        <div
-          class="w-full grid lg:grid-cols-2 gap-8 items-center justify-center"
-        >
+      <div
+        class="max-w-screen-2xl w-full h-screen flex justify-center items-center"
+      >
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <!-- Left Section -->
-          <div class="flex flex-col divide-y-4 divide-yellow-300">
-            <div class="text-center md:text-left mb-8">
-              <h1 class="text-4xl md:text-6xl font-bold text-white">
+          <div class="flex flex-col justify-center">
+            <div class="text-center md:text-left">
+              <h1
+                class="text-4xl md:text-6xl font-bold text-white leading-tight"
+              >
                 The Sales Gong
               </h1>
               <p
-                class="tex-sm md:text-md text-gray-200 mt-4 uppercase tracking-widest"
+                class="text-sm md:text-md text-gray-200 mt-4 uppercase tracking-widest"
               >
                 How Modern Sales Teams Celebrate
               </p>
             </div>
-            <div class="text-center md:text-left">
-              <h2
-                class="text-2xl md:text-3xl font-semibold text-gray-300 mb-4 mt-8"
-              >
+            <div class="text-center md:text-left my-8 md:my-24">
+              <h2 class="text-2xl md:text-3xl font-semibold text-gray-300">
                 Download our apps
               </h2>
               <p class="text-lg text-gray-400 mb-8">
@@ -74,7 +73,6 @@
                     alt="Download on the App Store"
                   />
                 </a>
-
                 <!-- Google Play Store Badge -->
                 <a
                   href="#"
@@ -87,16 +85,18 @@
                   />
                 </a>
               </div>
-
-                <div
-                  class="bg-green-300 w-full md:w-48 font-bold text-white p-4 mt-8 md:mt-24 rounded-xl hover:bg-green-700 focus:outline-none focus:bg-green-700 text-center cursor-pointer"
-                >
-                  CONTACT US
-                </div>
             </div>
+            <!-- Contact Us Button -->
+            <a href="#contact">
+              <div
+                class="bg-green-500 w-full md:w-48 font-bold text-white p-4 rounded-xl hover:bg-green-700 focus:outline-none focus:bg-green-700 text-center cursor-pointer transition duration-300 ease-in-out transform hover:scale-105"
+              >
+                CONTACT US
+              </div>
+            </a>
           </div>
           <!-- Right Section -->
-          <div class="flex flex-col">
+          <div class="flex justify-center items-center">
             <img
               src="./img/gong.png"
               alt="gong"
@@ -110,53 +110,53 @@
     <!-- About Page Section -->
     <div
       id="about"
-      class="w-full bg-gradient-to-r from-blue-900 to-indigo-600 px-8"
+      class="w-full bg-gradient-to-r from-blue-900 to-indigo-600 px-8 py-16"
     >
-      <div
-        class="max-w-screen-2xl w-full md:h-screen mx-auto justify-center flex"
-      >
+      <div class="max-w-screen-2xl mx-auto">
         <div
-          class="w-full grid lg:grid-cols-2 gap-8 items-center justify-center"
+          class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center justify-center"
         >
-          <div class="flex flex-col">
-            <h2 class="text-2xl md:text-4xl font-semibold text-gray-400 mb-4">
+          <!-- Left Section -->
+          <div class="flex flex-col text-white">
+            <h2 class="text-3xl md:text-4xl font-semibold mb-4">
               What Is The Sales Gong?
             </h2>
-            <p class="text-lg text-gray-300 mb-4">
+            <p class="text-gray-300 mb-4">
               Does your company have a remote or distributed sales team?
             </p>
-            <p class="text-lg text-gray-300 mb-4">
+            <p class="text-gray-300 mb-4">
               Remember the good old days when we all worked in the same place?
             </p>
-            <p class="text-lg text-gray-300 mb-8">
+            <p class="text-gray-300 mb-8">
               One of your salespeople would close a big deal and the
               celebrations would begin immediately! High fives…popping a bottle
               of champagne...or even ringing a sales bell in the office. We miss
               those days…
             </p>
-            <p class="text-lg text-gray-300 mb-8">
+            <p class="text-gray-300 mb-8">
               One of the things we struggle with most as sales leaders in
               today’s remote environment is celebrating successes and fostering
               healthy competition within our teams.
             </p>
-            <p class="text-lg text-gray-300 mb-8">
+            <p class="text-gray-300 mb-8">
               This is why we created The Sales Gong…
             </p>
-            <p class="text-lg text-gray-300 mb-8">
+            <p class="text-gray-300 mb-8">
               With The Sales Gong, when one of your salespeople closes a deal,
               they can alert the rest of the team by hitting the virtual sales
               gong on their phone. The gong will sound on your team’s devices
               and the celebration can begin…no matter where they are!
             </p>
-            <p class="text-lg text-gray-300 mb-8">
+            <p class="text-gray-300 mb-8">
               The Sales Gong is available from the Apple app store and on Google
               Play. It’s a great way to rally your team and costs less than a
               round of celebratory drinks!
             </p>
-            <p class="text-lg text-gray-300 mb-8">Check it out today.</p>
+            <p class="text-gray-300 mb-8">Check it out today.</p>
           </div>
-          <div class="flex flex-col">
-            <video class="w-full" controls>
+          <!-- Right Section -->
+          <div class="flex justify-center items-center">
+            <video class="w-full rounded-lg shadow-lg" controls>
               <source src="./videos/about_video.mp4" type="video/mp4" />
             </video>
           </div>
@@ -165,13 +165,16 @@
     </div>
 
     <!-- Contact Us Section -->
-    <div class="w-full bg-gradient-to-r from-blue-900 to-indigo-600 py-12 md:py-0">
+    <div
+      id="contact"
+      class="w-full bg-gradient-to-r from-blue-900 to-indigo-600 py-12 md:py-0"
+    >
       <div
         class="flex flex-col justify-center items-center md:h-screen max-w-screen-2xl w-full mx-auto"
       >
         <div class="w-full md:w-96 px-8">
           <h2
-            class="text-2xl md:text-4xl font-semibold text-gray-400 mb-4 text-center"
+            class="text-2xl md:text-4xl font-semibold text-white mb-4 text-center"
           >
             Contact Us
           </h2>
@@ -225,7 +228,7 @@
             </div>
             <button
               type="submit"
-              class="bg-green-300 w-full font-bold text-white py-2 px-6 rounded-lg hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700"
+              class="bg-green-500 w-full font-bold text-white py-2 px-6 rounded-lg hover:bg-green-700 focus:outline-none focus:bg-green-700"
             >
               SUBMIT
             </button>
