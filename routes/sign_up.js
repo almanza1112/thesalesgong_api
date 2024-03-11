@@ -67,6 +67,7 @@ router.post("/admin/complete_purchase", async (req, res) => {
     emails: completeTeamArray,
     fcm_tokens: fcmTokenArray,
     registered_team_members: registeredTeamMembersArray,
+    uid_team_members: [req.body.uid],
     gong_history: [],
     team_ID: teamID,
     team_name: teamName,
@@ -115,6 +116,7 @@ router.post("/admin/complete_purchase", async (req, res) => {
     role: "admin",
     paid: true,
     team_ID: teamID,
+    notification_sound: '1'
   });
 
   var teamIDsRef = firestore.collection("teams").doc("team_IDs");
@@ -160,6 +162,8 @@ router.post("/team_member", async (req, res) => {
               email: req.body.email,
               fcm_token: req.body.fcm_token,
               role: "team_member",
+              team_ID: teamID,
+              notification_sound: '1'
             });
 
             const teamRef = firestore.collection("teams").doc(teamID);
@@ -173,6 +177,9 @@ router.post("/team_member", async (req, res) => {
                   email: req.body.email,
                   role: "team_member",
                 }
+              ),
+              uid_team_members: firebase.firestore.FieldValue.arrayUnion(
+                userRecord.uid
               ),
             });
 

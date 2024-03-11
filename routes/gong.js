@@ -10,7 +10,6 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/hit", async (req, res) => {
-  console.log(req.body);
   var teamID = req.body.team_ID;
   var notificatinBody = 'Hit The Sales Gong!\n"' + req.body.message + '"';
   var serverTimestamp = req.body.timestamp;
@@ -20,6 +19,7 @@ router.post("/hit", async (req, res) => {
     .doc(teamID)
     .get()
     .then((doc) => {
+      // TODO: this can be a batch write, updating teh gong history array and sending the notification
       firestore
         .collection("teams")
         .doc(teamID)
@@ -31,26 +31,78 @@ router.post("/hit", async (req, res) => {
           }),
         })
         .then((value) => {
+          console.log(value);
           var fcm_tokens = doc.data().fcm_tokens;
-          const message = {
-            notification: {
-              title: req.body.name,
-              body: notificatinBody,
-              
-            },
-            tokens: fcm_tokens,
-          };
+          var uids = doc.data().uid_team_members;
 
-          messaging
-            .sendEachForMulticast(message)
-            .then((response) => {
-              // Response is a message ID string.
-              console.log("Successfully sent message:", response);
-              res.status(201).json({ message: "success" });
-            })
-            .catch((error) => {
-              console.log("Error sending message:", error);
-            });
+          for (var i = 0; i < uids.length; i++) {
+            firebase
+              .firestore()
+              .collection("users")
+              .doc(uids[i])
+              .get()
+              .then((doc) => {
+                var gong_num = doc.data().notification_sound;
+                var fcm_token = doc.data().fcm_token;
+
+                const message = {
+                  notification: {
+                    title: req.body.name,
+                    body: notificatinBody,
+                  },
+                  apns: {
+                    payload: {
+                      aps: {
+                        sound: "gong" + gong_num + ".aiff",
+                      },
+                    },
+                  },
+                  android: {
+                    notification: {
+                      sound: "gong" + gong_num + ".wav",
+                    },
+                  },
+                  token: fcm_token,
+                };
+
+                messaging
+                  .send(message)
+                  .then((response) => {
+                    console.log("Successfully sent message:", response);
+                    res.status(201).json({ message: "success" });
+                  })
+                  .catch((error) => {
+                    console.log("Error sending message:", error);
+                  });
+              });
+          }
+
+          // Old way of sending notifications
+          // const message = {
+          //   notification: {
+          //     title: req.body.name,
+          //     body: notificatinBody,
+          //   },
+          //   apns: {
+          //     payload: {
+          //       aps: {
+          //         sound: "gong1.aiff",
+          //       },
+          //     },
+          //   },
+          //   tokens: fcm_tokens,
+          // };
+
+          // messaging
+          //   .sendEachForMulticast(message)
+          //   .then((response) => {
+          //     // Response is a message ID string.
+          //     console.log("Successfully sent message:", response.responses[0]);
+          //     res.status(201).json({ message: "success" });
+          //   })
+          //   .catch((error) => {
+          //     console.log("Error sending message:", error);
+          //   });
         })
         .catch((error) => {});
     })
