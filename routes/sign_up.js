@@ -82,12 +82,8 @@ router.post("/admin/complete_purchase", async (req, res) => {
         '<p>Thank you for signing up for The Sales Gong!<br/><br/>We have sent the invites to your team members so they can install the app. If they don’t receive the notification, they can go to <a href="https://thesalesgong.com">www.thesalesgong.com</a> and install it on their device.' +
         "<br/><br/>Your team ID is: " +
         teamID +
-        "<br/><br/>Subsciption Details:" +
-        "<br/>Number of Users: " +
-        completeTeamArray.length +
-        "<br/>Annual Fee per User: $9.99" +
-        "<br/>Total Annuel Fee: $" +
-        completeTeamArray.length * 9.99 +
+        "<br/><br/>You will be charged $5.00 per month per user on your team." +
+        "<br/><br/>You can add or disable users"+
         "<br/><br/>You can add or disable users within your app settings at any time." +
         "<br/><br/>If you have any questions, please do not hesitate to reach out to us at hello@thesalesgong.com." +
         "<br/><br/>Happy selling!!</p>",
