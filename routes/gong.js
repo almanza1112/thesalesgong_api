@@ -59,8 +59,8 @@ router.post("/hit", async (req, res) => {
                   },
                   android: {
                     notification: {
-                      //channel_id: "basic_channel",
-                      sound: "gong1.mp3",
+                      channel_id: "basic_channel" + gong_num,
+                      sound: "gong" + gong_num + ".mp3",
                     },
                   },
                   token: fcm_token,
