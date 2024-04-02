@@ -34,9 +34,9 @@ router.post("/hit", async (req, res) => {
           console.log(value);
           var fcm_tokens = doc.data().fcm_tokens;
           var uids = doc.data().uid_team_members;
-
           for (var i = 0; i < uids.length; i++) {
-            firebase
+            if(uids[i] != req.body.uid) {
+              firebase
               .firestore()
               .collection("users")
               .doc(uids[i])
@@ -76,6 +76,7 @@ router.post("/hit", async (req, res) => {
                     console.log("Error sending message:", error);
                   });
               });
+            }
           }
 
           // Old way of sending notifications
