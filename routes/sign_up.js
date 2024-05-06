@@ -30,36 +30,6 @@ router.get("/email_check", async (req, res) => {
     });
 });
 
-router.post("/admin", async (req, res) => {
-  firebase
-    .auth()
-    .createUser({
-      email: req.body.email,
-      emailVerified: false,
-      password: req.body.password,
-      displayName: req.body.name,
-      disabled: false,
-    })
-    .then(function (userRecord) {
-      res.status(201).json({ result: "success" });
-    })
-    .catch(function (error) {
-      console.log("Error creating new user:", error.errorInfo);
-      if (
-        error.errorInfo.code == "auth/email-already-exists" ||
-        error.errorInfo.code == "auth/invalid-email"
-      ) {
-        res
-          .status(409)
-          .json({ result: "failure", message: error.errorInfo.code });
-      } else {
-        res
-          .status(500)
-          .json({ result: "failure", message: error.errorInfo.message });
-      }
-    });
-});
-
 router.post("/admin/complete_purchase", async (req, res) => {
   console.log(req.body);
   firebase
@@ -145,6 +115,7 @@ router.post("/admin/complete_purchase", async (req, res) => {
         role: "admin",
         paid: true,
         team_ID: teamID,
+        team_name: teamName,
         notification_sound: "1",
       });
 
@@ -208,6 +179,7 @@ router.post("/team_member", async (req, res) => {
               fcm_token: req.body.fcm_token,
               role: "team_member",
               team_ID: teamID,
+              team_name: teamName,
               notification_sound: "1",
             });
 
