@@ -154,26 +154,24 @@ router.post("/change_name", async (req, res) => {
 
 router.post("/add_teammember", async (req, res) => {
   var teamID = req.body.team_ID;
-  var email = req.body.email;
+  var emails = req.body.emails;
   var teamName = req.body.team_name;
-  
-  firebaseAuth
-    .getUserByEmail(email)
-    .then((doc) => {
-      res
-        .status(409)
-        .json({ message: "failure", error: "Email already in use" });
-    })
-    .catch((error) => {
-       const batch = firestore.batch();
+
+  // Removes the brackets surronding the emails string array
+  var trimmedEmailsString = emails.slice(1, -1);
+
+  // Convert string into array
+  var emailsArray = trimmedEmailsString.split(", ");
+
+  const batch = firestore.batch();
        const emailRef = firestore.collection("teams").doc(teamID);
        batch.update(emailRef, {
-         emails: admin.firestore.FieldValue.arrayUnion(email),
+         emails: admin.firestore.FieldValue.arrayUnion(...emailsArray),
        });
 
       const mailTeamRef = firestore.collection("mail").doc(teamID);
       batch.set(mailTeamRef, {
-        to: email,
+        to: emailsArray,
         message: {
           subject: "You're Invited!",
           html:
@@ -190,6 +188,21 @@ router.post("/add_teammember", async (req, res) => {
       batch.commit().then((result) => {
         res.status(201).json({ result: "success"});
       });
+});
+
+// This route is used to check if an email is already in use
+router.post("/check_email", async (req, res) => {
+  console.log(req.body);
+  var email = req.body.email;
+  firebaseAuth
+    .getUserByEmail(email)
+    .then((userRecord) => {
+      res
+        .status(409)
+        .json({ message: "failure", error: "Email already in use" });
+    })
+    .catch((error) => {
+      res.status(201).json({ message: "success" });
     });
 });
 
