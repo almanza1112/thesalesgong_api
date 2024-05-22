@@ -31,7 +31,6 @@ router.get("/email_check", async (req, res) => {
 });
 
 router.post("/admin/complete_purchase", async (req, res) => {
-  console.log(req.body);
   firebase
     .auth()
     .createUser({
@@ -45,6 +44,7 @@ router.post("/admin/complete_purchase", async (req, res) => {
       var teamMembers = req.body.team_members;
       var adminEmail = req.body.email;
       var teamName = req.body.team_name;
+      
 
       // Removes the brackets surronding the move string array
       var trimmeedTeamMembers = teamMembers.slice(1, -1);
@@ -74,6 +74,7 @@ router.post("/admin/complete_purchase", async (req, res) => {
         gong_history: [],
         team_ID: teamID,
         team_name: teamName,
+        total_team_members_allowed: completeTeamArray.length,
       });
 
       const mailAdminRef = firestore.collection("mail").doc(userRecord.uid);
@@ -117,6 +118,11 @@ router.post("/admin/complete_purchase", async (req, res) => {
         team_ID: teamID,
         team_name: teamName,
         notification_sound: "1",
+        subscription: {
+          status: "active",
+          total_team_members_allowed: completeTeamArray.length,
+          type: req.body.subscription_type,
+        }
       });
 
       var teamIDsRef = firestore.collection("teams").doc("team_IDs");
