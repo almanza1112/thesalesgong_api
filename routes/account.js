@@ -282,13 +282,181 @@ router.post("/admin/edit_email", async (req, res) => {
             },
           });
 
-          batch.commit().then((result) => {
-            res.status(201).json({ result: "success", team_ID: teamID });
-          }).catch((error) => {
-            res.status(500).json({ message: "failure", error: error });
-          });
+          batch
+            .commit()
+            .then((result) => {
+              res.status(201).json({ result: "success", team_ID: teamID });
+            })
+            .catch((error) => {
+              res.status(500).json({ message: "failure", error: error });
+            });
         });
     });
 });
 
+router.post("/admin/add_email", async (req, res) => {
+  let newEmail = req.body.new_email;
+  let teamID = req.body.team_ID;
+
+  // Check if email is already in use
+  firebaseAuth
+    .getUserByEmail(newEmail)
+    .then((userRecord) => {
+      // Email exists, send error back
+      res
+        .status(409)
+        .json({ message: "failure", error: "Email already in use" });
+    })
+    .catch((error) => {
+      // Email does not exist
+
+      firestore
+        .collection("teams")
+        .doc(teamID)
+        .get()
+        .then((doc) => {
+          var teamName = doc.data().team_name;
+          var batch = firestore.batch();
+
+          const teamRef = firestore.collection("teams").doc(teamID);
+          batch.update(teamRef, {
+            emails: admin.firestore.FieldValue.arrayUnion(newEmail),
+          });
+          const mailTeamRef = firestore.collection("mail").doc(teamID);
+          batch.set(mailTeamRef, {
+            to: newEmail,
+            message: {
+              subject: "You're Invited!",
+              html:
+                "<p>Hello!<br/><br/>You’ve been invited to The Sales Gong for " +
+                teamName +
+                "!" +
+                "<br/><br/>Go to www.thesalesgong.com to install the app on your device to join the celebration." +
+                "<br/><br/>Your Team ID is: " +
+                teamID +
+                "<br/><br/>Now let’s close some deals and hit that gong!!</p>",
+            },
+          });
+
+          batch
+            .commit()
+            .then((result) => {
+              res.status(201).json({ result: "success", team_ID: teamID });
+            })
+            .catch((error) => {
+              res.status(500).json({ message: "failure", error: error });
+            });
+        })
+        .catch((error) => {
+          res.status(500).json({ message: "failure", error: error });
+        });
+    });
+});
+
+router.post("/delete_account", async (req, res) => {
+  let uid = req.body.uid;
+  console.log(uid);
+  firestore
+    .collection("users")
+    .doc(uid)
+    .get()
+    .then((doc) => {
+      let role = doc.data().role;
+      let teamID = doc.data().team_ID;
+      let email = doc.data().email;
+
+      // Check if user is an admin
+      if (role === "admin") {
+        // User is an admin, delete the team
+
+        // Query all the team members
+
+        const queryRef = firestore
+          .collection("users")
+          .where("team_ID", "==", teamID)
+          .get()
+          .then((querySnapshot) => {
+            console.log(querySnapshot.docs.length);
+            // querySnapshot.forEach((doc) => {
+            //   let userRef = firestore.collection("users").doc(doc.id);
+            //   userRef.delete().then(() => {
+            //     console.log("User deleted successfully");
+            //   }).catch((error) => {
+            //     console.log("Error deleting user:", error);
+            //   });
+            // });
+          });
+      } else if (role === "team_member") {
+        // User is a team member, delete the user from teams doc in teams collection
+        firestore
+          .collection("teams")
+          .doc(teamID)
+          .get()
+          .then((doc) => {
+            // Set the arrays
+            let emailsArray = doc.data().emails;
+            let registeredTeamMembersArray = doc.data().registered_team_members;
+            let uidsTeamMembersArray = doc.data().uid_team_members;
+
+            // Find the index of the email and uid in the arrays
+            let emailIndex = emailsArray.indexOf(email);
+            let registeredTeamMemberIndex =
+              registeredTeamMembersArray.findIndex(
+                (user) => user.email === email
+              );
+            let uidIndex = uidsTeamMembersArray.indexOf(uid);
+
+            // Remove the indexes from the arrays
+            emailsArray.splice(emailIndex, 1);
+            registeredTeamMembersArray.splice(registeredTeamMemberIndex, 1);
+            uidsTeamMembersArray.splice(uidIndex, 1);
+
+            // Update the team doc
+            firestore
+              .collection("teams")
+              .doc(teamID)
+              .update({
+                emails: emailsArray,
+                registered_team_members: registeredTeamMembersArray,
+                uid_team_members: uidsTeamMembersArray,
+              })
+              .then(() => {
+                console.log(1);
+                // Delete the user from FirebaseAuthenticaion first and then Firestore
+                firebaseAuth
+                  .deleteUser(uid)
+                  .then(() => {
+                    
+                    // Delete document from Firestore
+                    let userRef = firestore.collection("users").doc(uid);
+                    userRef
+                      .delete()
+                      .then(() => {
+
+                        res.status(201).json({ message: "success" });
+                      })
+                      .catch((error) => {
+                        res
+                          .status(400)
+                          .json({ message: "failure", error: error });
+                      });
+                  })
+                  .catch((error) => {
+                    console.log(error);
+                    res.status(400).json({ message: "failure", error: error });
+                  });
+              })
+              .catch((error) => {
+                res.status(400).json({ message: "failure", error: error });
+              });
+          })
+          .catch((error) => {
+            res.status(400).json({ message: "failure", error: error });
+          });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({ message: "failure", error: error });
+    });
+});
 module.exports = router;
