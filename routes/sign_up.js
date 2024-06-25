@@ -44,7 +44,6 @@ router.post("/admin/complete_purchase", async (req, res) => {
       var teamMembers = req.body.team_members;
       var adminEmail = req.body.email;
       var teamName = req.body.team_name;
-      
 
       // Removes the brackets surronding the move string array
       var trimmeedTeamMembers = teamMembers.slice(1, -1);
@@ -55,6 +54,16 @@ router.post("/admin/complete_purchase", async (req, res) => {
       var fcmTokenArray = [req.body.fcm_token];
 
       var completeTeamArray = [...teamMembersArray, req.body.email];
+
+      // Check if the team is over 20 members
+      // 20 will reperesent "unlimited" team members
+      var totalTeamMembersAllowed;
+    
+      if(completeTeamArray.length < 20){
+        totalTeamMembersAllowed = completeTeamArray.length;
+      } else {
+        totalTeamMembersAllowed = 20;
+      }
 
       var registeredTeamMembersArray = [
         { name: req.body.name, email: req.body.email, role: "admin" },
@@ -74,7 +83,7 @@ router.post("/admin/complete_purchase", async (req, res) => {
         gong_history: [],
         team_ID: teamID,
         team_name: teamName,
-        total_team_members_allowed: completeTeamArray.length,
+        total_team_members_allowed: totalTeamMembersAllowed,
       });
 
       const mailAdminRef = firestore.collection("mail").doc(userRecord.uid);
@@ -120,7 +129,7 @@ router.post("/admin/complete_purchase", async (req, res) => {
         notification_sound: "1",
         subscription: {
           status: "active",
-          total_team_members_allowed: completeTeamArray.length,
+          total_team_members_allowed: totalTeamMembersAllowed,
           type: req.body.subscription_type,
         }
       });
