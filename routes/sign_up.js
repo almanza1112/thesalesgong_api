@@ -51,15 +51,13 @@ router.post("/admin/complete_purchase", async (req, res) => {
       // Convert string into array
       var teamMembersArray = trimmeedTeamMembers.split(",");
 
-      var fcmTokenArray = [req.body.fcm_token];
-
       var completeTeamArray = [...teamMembersArray, req.body.email];
 
       // Check if the team is over 20 members
       // 20 will reperesent "unlimited" team members
       var totalTeamMembersAllowed;
-    
-      if(completeTeamArray.length < 20){
+
+      if (completeTeamArray.length < 20) {
         totalTeamMembersAllowed = completeTeamArray.length;
       } else {
         totalTeamMembersAllowed = 20;
@@ -77,13 +75,13 @@ router.post("/admin/complete_purchase", async (req, res) => {
       const teamRef = firestore.collection("teams").doc(teamID);
       batch.set(teamRef, {
         emails: completeTeamArray,
-        fcm_tokens: fcmTokenArray,
         registered_team_members: registeredTeamMembersArray,
         uid_team_members: [userRecord.uid],
         gong_history: [],
         team_ID: teamID,
         team_name: teamName,
         total_team_members_allowed: totalTeamMembersAllowed,
+        subscription_status: "active",
       });
 
       const mailAdminRef = firestore.collection("mail").doc(userRecord.uid);
@@ -131,7 +129,7 @@ router.post("/admin/complete_purchase", async (req, res) => {
           status: "active",
           total_team_members_allowed: totalTeamMembersAllowed,
           type: req.body.subscription_type,
-        }
+        },
       });
 
       var teamIDsRef = firestore.collection("teams").doc("team_IDs");
@@ -170,9 +168,11 @@ router.post("/team_member", async (req, res) => {
     .get()
     .then((doc) => {
       // Team exists, proceed to check if email is in team
-      var emails = doc.data().emails;
-      var teamName = doc.data().team_name;
-      if (emails.includes(email)) {
+      let emails = doc.data().emails;
+      let teamName = doc.data().team_name;
+      let subscriptionStatus = doc.data().subscription_status;
+
+      if (emails.includes(email) && subscriptionStatus == "active") {
         // Email is in team, proceed to create user
         firebase
           .auth()
@@ -196,13 +196,14 @@ router.post("/team_member", async (req, res) => {
               team_ID: teamID,
               team_name: teamName,
               notification_sound: "1",
+              subscription: {
+                status: "active",
+              },
+              is_in_team: true,
             });
 
             const teamRef = firestore.collection("teams").doc(teamID);
             batch.update(teamRef, {
-              fcm_tokens: firebase.firestore.FieldValue.arrayUnion(
-                req.body.fcm_token
-              ),
               registered_team_members: firebase.firestore.FieldValue.arrayUnion(
                 {
                   name: req.body.name,
@@ -242,6 +243,13 @@ router.post("/team_member", async (req, res) => {
               });
             }
           });
+      } else if (subscriptionStatus != "active") {
+        // Team subscription is not active
+        res.status(409).json({
+          result: "failure",
+          message: "Team subscription is not active",
+          part: "subscription status",
+        });
       } else {
         // Team exists but email is not in team
         res.status(409).json({

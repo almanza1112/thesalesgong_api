@@ -297,19 +297,77 @@ router.post("/admin/edit_email", async (req, res) => {
 router.post("/admin/add_email", async (req, res) => {
   let newEmail = req.body.new_email;
   let teamID = req.body.team_ID;
-
   // Check if email is already in use
   firebaseAuth
     .getUserByEmail(newEmail)
     .then((userRecord) => {
-      // Email exists, send error back
-      res
-        .status(409)
-        .json({ message: "failure", error: "Email already in use" });
+      // Email exists, now check if user is in team
+      let userUid = userRecord.uid;
+      firestore
+        .collection("users")
+        .doc(userUid)
+        .get()
+        .then((doc) => {
+          // User already has an account, check if user is in team
+          let userIsInTeam = doc.data().is_in_team;
+          //var userUid = doc.data().uid;
+          console.log("here", userUid);
+
+          console.log(userUid);
+          if (userIsInTeam) {
+            res
+              .status(409)
+              .json({ message: "failure", error: "Email already in use" });
+          } else {
+            // User is not in team, add user to team and update user's doc
+            // first get team name
+
+            firestore
+              .collection("teams")
+              .doc(teamID)
+              .get()
+              .then((docu) => {
+                let teamName = docu.data().team_name;
+                let batch = firestore.batch();
+                let teamRef = firestore.collection("teams").doc(teamID);
+                let userRef = firestore.collection("users").doc(userUid);
+
+                batch.update(teamRef, {
+                  emails: admin.firestore.FieldValue.arrayUnion(newEmail),
+                  uid_team_members:
+                    admin.firestore.FieldValue.arrayUnion(userUid),
+                  registered_team_members:
+                    admin.firestore.FieldValue.arrayUnion({
+                      email: newEmail,
+                      name: userRecord.displayName,
+                      role: "team_member",
+                    }),
+                });
+                batch.update(userRef, {
+                  is_in_team: true,
+                  team_ID: teamID,
+                  role: "team_member",
+                  team_name: teamName,
+                });
+
+                batch
+                  .commit()
+                  .then(() => {
+                    res.status(201).json({ message: "success" });
+                  })
+                  .catch((error) => {
+                    res.status(500).json({ message: "failure", error: error });
+                  });
+              })
+              .catch((error) => {
+                res.status(500).json({ message: "failure", error: error });
+              });
+          }
+        })
+        .catch((error) => {});
     })
     .catch((error) => {
       // Email does not exist
-
       firestore
         .collection("teams")
         .doc(teamID)
@@ -353,9 +411,96 @@ router.post("/admin/add_email", async (req, res) => {
     });
 });
 
+router.post("/admin/delete_email", async (req, res) => {
+  var email = req.body.email;
+  var teamID = req.body.team_ID;
+  var isRegistered = req.body.is_registered;
+
+  if (isRegistered === "true") {
+    // User is registered, delete the user from the team
+    // Need uid to delete from uid_team_members array
+    admin
+      .auth()
+      .getUserByEmail(email)
+      .then((userRecord) => {
+        firestore
+          .collection("teams")
+          .doc(teamID)
+          .get()
+          .then((doc) => {
+            let emailsArray = doc.data().emails;
+            let registeredTeamMembersArray = doc.data().registered_team_members;
+            let uidTeamMembersArray = doc.data().uid_team_members;
+
+            let emailIndex = emailsArray.indexOf(email);
+            let registeredTeamMemberIndex =
+              registeredTeamMembersArray.findIndex(
+                (user) => user.email === email
+              );
+            let uidIndex = uidTeamMembersArray.indexOf(userRecord.uid);
+
+            emailsArray.splice(emailIndex, 1);
+            registeredTeamMembersArray.splice(registeredTeamMemberIndex, 1);
+            uidTeamMembersArray.splice(uidIndex, 1);
+
+            const batch = firestore.batch();
+            const teamRef = firestore.collection("teams").doc(teamID);
+            const userRef = firestore.collection("users").doc(userRecord.uid);
+
+            batch.update(teamRef, {
+              emails: emailsArray,
+              registered_team_members: registeredTeamMembersArray,
+              uid_team_members: uidTeamMembersArray,
+            });
+
+            batch.update(userRef, {
+              is_in_team: false,
+            });
+
+            batch
+              .commit()
+              .then(() => {
+                res.status(201).json({ message: "success" });
+              })
+              .catch((error) => {
+                console.log("error deleting user from team", error);
+                res.status(500).json({ message: "failure", error: error });
+              });
+          })
+          .catch((error) => {});
+      })
+      .catch((error) => {
+        console.log("error getting user by email", error);
+      });
+  } else {
+    firestore
+      .collection("teams")
+      .doc(teamID)
+      .get()
+      .then((doc) => {
+        var emailsArray = doc.data().emails;
+        var emailIndex = emailsArray.indexOf(email);
+
+        emailsArray.splice(emailIndex, 1);
+        firestore
+          .collection("teams")
+          .doc(teamID)
+          .update({
+            emails: emailsArray,
+          })
+          .then(() => {
+            res.status(201).json({ message: "success" });
+          })
+          .catch((error) => {
+            res.status(500).json({ message: "failure", error: error });
+          });
+      })
+      .catch((error) => {});
+  }
+});
+
 router.post("/delete_account", async (req, res) => {
   let uid = req.body.uid;
-  console.log(uid);
   firestore
     .collection("users")
     .doc(uid)
@@ -426,13 +571,11 @@ router.post("/delete_account", async (req, res) => {
                 firebaseAuth
                   .deleteUser(uid)
                   .then(() => {
-                    
                     // Delete document from Firestore
                     let userRef = firestore.collection("users").doc(uid);
                     userRef
                       .delete()
                       .then(() => {
-
                         res.status(201).json({ message: "success" });
                       })
                       .catch((error) => {
@@ -459,4 +602,5 @@ router.post("/delete_account", async (req, res) => {
       res.status(500).json({ message: "failure", error: error });
     });
 });
+
 module.exports = router;
