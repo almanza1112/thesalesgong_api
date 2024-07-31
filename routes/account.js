@@ -499,6 +499,34 @@ router.post("/admin/delete_email", async (req, res) => {
   }
 });
 
+router.post("/admin/update_subscription", async (req, res) => {
+  let teamID = req.body.team_ID;
+  let subscriptionStatus = req.body.subscription_status;
+  let adminUid = req.body.uid;
+
+  let batch = firestore.batch();
+  let teamRef = firestore.collection("teams").doc(teamID);
+  let userRef = firestore.collection("users").doc(adminUid);
+
+  batch.update(teamRef, {
+    subscription_status: subscriptionStatus,
+  });
+
+  batch.update(userRef, {
+    subscription:{
+      status: subscriptionStatus
+    }
+  }, {merge: true});
+
+  batch.commit().then(() => {
+    console.log("success");
+    res.status(201).json({ message: "success" });
+  }).catch((error) => {
+    res.status(500).json({ message: "failure", error: error });
+  });
+  
+});
+
 router.post("/delete_account", async (req, res) => {
   let uid = req.body.uid;
   firestore
