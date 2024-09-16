@@ -537,6 +537,7 @@ router.post("/delete_account", async (req, res) => {
       let role = doc.data().role;
       let teamID = doc.data().team_ID;
       let email = doc.data().email;
+      let isInTeam = doc.data().is_in_team;
 
       // Check if user is an admin
       if (role === "admin") {
@@ -594,7 +595,6 @@ router.post("/delete_account", async (req, res) => {
                 uid_team_members: uidsTeamMembersArray,
               })
               .then(() => {
-                console.log(1);
                 // Delete the user from FirebaseAuthenticaion first and then Firestore
                 firebaseAuth
                   .deleteUser(uid)

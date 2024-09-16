@@ -103,7 +103,9 @@ router.post("/hit", async (req, res) => {
                     }
                   }
                 })
-                .catch((error) => {});
+                .catch((error) => {
+                  console.log();
+                });
             } else {
               res.status(400).json({ message: "No other team members." });
             }
